@@ -1,61 +1,42 @@
-import { ERC20TokenTransfer, ERC20Approval, SubstrateTransfer } from "../types";
-import { TransferLog } from "../types/abi-interfaces/Erc20Abi";
-import { ApproveTransaction } from "../types/abi-interfaces/Erc20Abi";
-import assert from "assert";
-import { SubstrateEvent } from "@subql/types";
-import { Balance } from "@polkadot/types/interfaces";
+import { SubstrateBlock, SubstrateEvent, SubstrateExtrinsic } from '@subql/types';
+import { Block, Extrinsic, Event } from '../types';
 
-export async function handleEVMLog(log: TransferLog): Promise<void> {
-  logger.info(`New transfer transaction log at block ${log.blockNumber}`);
-  assert(log.args, "No log.args");
+export async function handleBlock(block: SubstrateBlock): Promise<void> {
+  console.log("⬜️ Handling new block: #" + block.block.header.number.toString())
 
-  const transaction = ERC20TokenTransfer.create({
-    id: log.transactionHash,
-    to: log.args.to,
-    from: log.args.from,
-    value: log.args.value.toBigInt(),
-    contractAddress: log.address,
-  });
+  let blockRecord = new Block(
+    block.block.header.number.toString(),
+    block.block.header.hash.toString(),
+    block.block.header.parentHash.toString()
+  );
+  blockRecord.timestamp = block.timestamp;
 
-  await transaction.save();
+  await blockRecord.save();
 }
 
-export async function handleEVMTransaction(
-  tx: ApproveTransaction
-): Promise<void> {
-  logger.info(`New Approval transaction at block ${tx.blockNumber}`);
-  assert(tx.args, "No tx.args");
-
-  const approval = ERC20Approval.create({
-    id: tx.hash,
-    owner: tx.from,
-    spender: await tx.args[0],
-    value: BigInt(await tx.args[1].toString()),
-    contractAddress: tx.to,
-  });
-
-  await approval.save();
+export async function handleCall(extrinsic: SubstrateExtrinsic): Promise<void> {
+  console.log("🖍️ Handling new call: " + extrinsic.extrinsic.method.method)
+  let extrinsicRecord = new Extrinsic(
+    extrinsic.idx.toString(),
+    extrinsic.block.block.header.number.toString(),
+    extrinsic.extrinsic.method.method,
+    extrinsic.extrinsic.method.section,
+    extrinsic.extrinsic.signer.toString(),
+    extrinsic.extrinsic.nonce.toNumber(),
+    JSON.stringify(extrinsic.extrinsic.args)
+  );
+  await extrinsicRecord.save();
 }
 
 export async function handleEvent(event: SubstrateEvent): Promise<void> {
-  logger.info(
-    `New transfer event found at block ${event.block.block.header.number.toString()}`
+  console.log("﹗ Handling new event: " + event.event.method)
+  let eventRecord = new Event(
+    event.idx.toString(),
+    event.block.block.header.number.toString(),
+    event.event.method,
+    event.event.section,
+    event.event.data.toString()
   );
-  const {
-    event: {
-      data: [from, to, amount],
-    },
-  } = event;
-
-  const blockNumber: number = event.block.block.header.number.toNumber();
-  const transfer = SubstrateTransfer.create({
-    id: `${event.block.block.header.number.toNumber()}-${event.idx}`,
-    blockNumber,
-    date: event.block.timestamp,
-    from: from.toString(),
-    to: to.toString(),
-    amount: (amount as Balance).toBigInt(),
-  });
-
-  await transfer.save();
+  eventRecord.extrinsicId = event.extrinsic?.idx.toString();
+  await eventRecord.save();
 }

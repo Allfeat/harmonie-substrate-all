@@ -2,27 +2,30 @@
 # Add the `@index` or `@index(unique: true)` annotation after any non-key field
 # https://academy.subquery.network/build/graphql.html#indexing-by-non-primary-key-field
 
-type ERC20TokenTransfer @entity {
+type Block @entity {
   id: ID!
-  value: BigInt!
-  to: String!
-  from: String!
-  contractAddress: String
+  hash: String! @index(unique: true)
+  timestamp: Date
+  parentHash: String!
+  extrinsics: [Extrinsic!]! @derivedFrom(field: "block")
 }
 
-type ERC20Approval @entity {
+type Extrinsic @entity {
   id: ID!
-  value: BigInt!
-  owner: String!
-  spender: String!
-  contractAddress: String
+  block: Block! @index
+  method: String! @index
+  section: String! @index
+  signer: String! @index
+  nonce: Int!
+  args: String!
+  events: [Event!]! @derivedFrom(field: "extrinsic")
 }
 
-type SubstrateTransfer @entity {
+type Event @entity {
   id: ID!
-  amount: BigInt!
-  blockNumber: Int!
-  date: Date
-  from: String!
-  to: String!
+  block: Block! @index
+  method: String! @index
+  section: String! @index
+  data: String!
+  extrinsic: Extrinsic
 }
