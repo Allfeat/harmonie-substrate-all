@@ -1,0 +1,33 @@
+# // Auto-generated , DO NOT EDIT
+specVersion: 1.0.0
+version: 0.0.1
+name: harmonie-evm-starter
+description: >-
+  This project can be used as a starting point for developing your SubQuery
+  project
+runner:
+  node:
+    name: "@subql/node"
+    version: ">=3.0.1"
+  query:
+    name: "@subql/query"
+    version: "*"
+schema:
+  file: ./schema.graphql
+network:
+  chainId: "0x7e18728b3f890088891d03dd5b30db9f1a0e62e05bc30eb4cf53f3c4a8280d76"
+  endpoint:
+    - wss://harmonie-endpoint-01.allfeat.io
+  chaintypes:
+    file: ./dist/chaintypes.js
+dataSources:
+  - kind: substrate/Runtime
+    startBlock: 1737000
+    mapping:
+      file: ./dist/index.js
+      handlers:
+        - kind: substrate/EventHandler
+          handler: handleEvent
+          filter:
+            module: balances
+            method: Transfer
