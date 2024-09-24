@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@subql/types-ethereum": "latest",
+    "@subql/common-substrate": "^4.3.0",
     "assert": "^2.0.0"
   },
   "devDependencies": {
